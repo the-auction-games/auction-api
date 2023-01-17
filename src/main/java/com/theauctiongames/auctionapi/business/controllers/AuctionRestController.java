@@ -145,10 +145,10 @@ public class AuctionRestController {
      * @return an http status code signifying success or failure
      */
     @DeleteMapping(path = "/auctions/{id}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> deleteAuction(@PathVariable String id) {
+    public ResponseEntity<?> deleteAuctionById(@PathVariable String id) {
         try {
             // Try to delete the auction
-            boolean deleted = this.service.deleteAuction(id);
+            boolean deleted = this.service.deleteAuctionById(id);
 
             // Check if the auction was deleted
             if (deleted) {

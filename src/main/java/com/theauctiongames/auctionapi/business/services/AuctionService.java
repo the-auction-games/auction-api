@@ -48,7 +48,7 @@ public interface AuctionService {
      * @param id the id
      * @return true if the auction was deleted, false otherwise
      */
-    boolean deleteAuction(String id);
+    boolean deleteAuctionById(String id);
 
     /**
      * Get all bids for an auction.

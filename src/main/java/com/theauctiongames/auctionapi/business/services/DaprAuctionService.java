@@ -88,7 +88,7 @@ public class DaprAuctionService implements AuctionService {
      * @return true if the auction was deleted, false otherwise
      */
     @Override
-    public boolean deleteAuction(String id) {
+    public boolean deleteAuctionById(String id) {
         // Call the delete method on the dao
         return this.auctionDao.deleteAuctionById(id);
     }

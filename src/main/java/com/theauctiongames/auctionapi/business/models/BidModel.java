@@ -33,7 +33,7 @@ public class BidModel {
     /**
      * The bid price.
      */
-    private float price;
+    private double price;
 
     /**
      * The timestamp of the bid's creation.
