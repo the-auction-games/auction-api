@@ -15,7 +15,7 @@ import java.util.Optional;
  * The rest controller for providing the front-facing auction API.
  */
 @RestController
-@RequestMapping("/")
+@RequestMapping("/api/v1")
 public class AuctionRestController {
 
     /**

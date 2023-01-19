@@ -1,6 +1,5 @@
 package com.theauctiongames.auctionapi;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theauctiongames.auctionapi.business.models.AuctionModel;
@@ -50,7 +49,7 @@ class AuctionApiApplicationTests {
      */
     public AuctionApiApplicationTests(WebApplicationContext context) {
         // Set up the base uri
-        this.baseUri = "/auctions";
+        this.baseUri = "/api/v1/auctions";
 
         // Set up the mock mvc
         this.mvc = MockMvcBuilders.webAppContextSetup(context).build();
