@@ -153,7 +153,7 @@ public class AuctionRestController {
             // Check if the auction was deleted
             if (deleted) {
                 // Return success
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
                 // Account not found, return not found
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
