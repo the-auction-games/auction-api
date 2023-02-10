@@ -27,6 +27,7 @@ public class AuctionModel {
     public static AuctionModel fromEntity(AuctionEntity entity) {
         return new AuctionModel(
                 entity.getId(),
+                entity.getSellerId(),
                 entity.getTitle(),
                 entity.getDescription(),
                 entity.getStartBid(),
@@ -45,6 +46,11 @@ public class AuctionModel {
      * The auction's id.
      */
     private String id;
+
+    /**
+     * The auction seller's id.
+     */
+    private String sellerId;
 
     /**
      * The auction's title.

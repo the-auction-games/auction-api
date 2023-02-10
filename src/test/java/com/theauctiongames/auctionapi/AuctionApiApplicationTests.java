@@ -66,6 +66,7 @@ class AuctionApiApplicationTests {
         // Set up the auction model
         this.auction = new AuctionModel(
                 UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
                 "Test Auction",
                 "Test Auction Description",
                 100,

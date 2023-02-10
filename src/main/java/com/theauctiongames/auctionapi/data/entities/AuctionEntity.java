@@ -27,6 +27,7 @@ public class AuctionEntity {
     public static AuctionEntity fromModel(AuctionModel model) {
         return new AuctionEntity(
                 model.getId(),
+                model.getSellerId(),
                 model.getTitle(),
                 model.getDescription(),
                 model.getBinPrice(),
@@ -45,6 +46,11 @@ public class AuctionEntity {
      * The auction's id.
      */
     private String id;
+
+    /**
+     * The auction seller's id.
+     */
+    private String sellerId;
 
     /**
      * The auction's title.
