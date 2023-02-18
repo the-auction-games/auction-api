@@ -142,6 +142,12 @@ public class DaprAuctionService implements AuctionService {
         // The current bids
         List<BidEntity> bids = auction.get().getBids();
 
+        // Check if the bid is lower than the starting price
+        if (bid.getPrice() <= auction.get().getStartBid()) {
+            // Return bid too low
+            return BidResponse.BID_TOO_LOW;
+        }
+
         // Check if the bid is higher than the current highest bid
         if (bids.size() > 0) {
             // The last bid
