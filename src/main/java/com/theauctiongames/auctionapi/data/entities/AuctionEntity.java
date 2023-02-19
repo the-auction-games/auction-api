@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -30,12 +31,12 @@ public class AuctionEntity {
                 model.getSellerId(),
                 model.getTitle(),
                 model.getDescription(),
-                model.getBinPrice(),
+                model.getStartBid(),
                 model.getBids().stream()
-                        .map(BidEntity::fromModel)
+                        .map(OfferEntity::fromModel)
                         .collect(Collectors.toList()),
                 model.getBinPrice(),
-                model.getBinBuyerId(),
+                model.getPurchase() != null ? OfferEntity.fromModel(model.getPurchase()) : null,
                 model.getBase64Image(),
                 model.getCreationTimestamp(),
                 model.getExpirationTimestamp()
@@ -70,7 +71,7 @@ public class AuctionEntity {
     /**
      * A list of bids on the auction.
      */
-    private List<BidEntity> bids;
+    private List<OfferEntity> bids;
 
     /**
      * The auction's buy it now price.
@@ -78,9 +79,9 @@ public class AuctionEntity {
     private double binPrice;
 
     /**
-     * The id of the buyer who bought the auction with the buy it now price.
+     * The purchase associated with the auction.
      */
-    private String binBuyerId;
+    private OfferEntity purchase;
 
     /**
      * The base64 encoded image of the auction.

@@ -3,7 +3,7 @@ package com.theauctiongames.auctionapi;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.theauctiongames.auctionapi.business.models.AuctionModel;
-import com.theauctiongames.auctionapi.business.models.BidModel;
+import com.theauctiongames.auctionapi.business.models.OfferModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,12 +72,12 @@ class AuctionApiApplicationTests {
                 "Test Auction Description",
                 100,
                 List.of(
-                        new BidModel("Test User", 100, System.currentTimeMillis() - 10_000),
-                        new BidModel("Test User 2", 200, System.currentTimeMillis() - 5_000),
-                        new BidModel("Test User 3", 300, System.currentTimeMillis() - 1_000)
+                        new OfferModel("Test User", 100, System.currentTimeMillis() - 10_000),
+                        new OfferModel("Test User 2", 200, System.currentTimeMillis() - 5_000),
+                        new OfferModel("Test User 3", 300, System.currentTimeMillis() - 1_000)
                 ),
-                10_000,
-                "",
+                19_000,
+                null,
                 "",
                 System.currentTimeMillis() - 50_000,
                 System.currentTimeMillis() + 100_000_000
@@ -192,7 +193,7 @@ class AuctionApiApplicationTests {
         assert result.getResponse().getStatus() == 200;
 
         // Map the result to a list of bids
-        List<BidModel> bids = this.mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+        List<OfferModel> bids = this.mapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
         });
 
         // Assert the bids are correct
@@ -210,7 +211,7 @@ class AuctionApiApplicationTests {
     @Test
     public void bidOnAuction() throws Exception {
         // Create a bid
-        BidModel bid = new BidModel("Test User 4", 400, System.currentTimeMillis());
+        OfferModel bid = new OfferModel("Test User 4", 400, System.currentTimeMillis());
 
         // Post the bid
         MvcResult result = mvc.perform(MockMvcRequestBuilders.post(this.baseUri + "/" + this.auction.getId() + "/bids")
@@ -240,5 +241,37 @@ class AuctionApiApplicationTests {
         assert updatedAuction.getBids().get(3).getPrice() == 400;
     }
 
+    /**
+     * Purchase an auction
+     */
+    @Test
+    public void purchaseAuction() throws Exception {
 
+        // Create a purchase
+        OfferModel purchase = new OfferModel("Test User 4", this.auction.getBinPrice(), System.currentTimeMillis());
+
+        // Purchase the auction
+        MvcResult result = mvc.perform(MockMvcRequestBuilders.post(this.baseUri + "/" + this.auction.getId() + "/purchase")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.mapper.writeValueAsString(purchase))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        // Assert status is ok
+        assert result.getResponse().getStatus() == 204;
+
+        // Get the auction
+        result = mvc.perform(MockMvcRequestBuilders.get(this.baseUri + "/" + this.auction.getId())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        // Assert status is ok
+        assert result.getResponse().getStatus() == 200;
+
+        // Map the result to an auction model
+        AuctionModel updatedAuction = this.mapper.readValue(result.getResponse().getContentAsString(), AuctionModel.class);
+
+        // Assert the auction was purchased
+        assert updatedAuction.getPurchase() != null;
+    }
 }

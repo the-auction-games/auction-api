@@ -1,7 +1,7 @@
 package com.theauctiongames.auctionapi.business.controllers;
 
 import com.theauctiongames.auctionapi.business.models.AuctionModel;
-import com.theauctiongames.auctionapi.business.models.BidModel;
+import com.theauctiongames.auctionapi.business.models.OfferModel;
 import com.theauctiongames.auctionapi.business.services.AuctionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -177,7 +177,7 @@ public class AuctionRestController {
     public ResponseEntity<?> getBidsForAuction(@PathVariable String id) {
         try {
             // Get the bids for the auction
-            Optional<List<BidModel>> bids = this.service.getBidsForAuction(id);
+            Optional<List<OfferModel>> bids = this.service.getBidsForAuction(id);
 
             // Check if bids are present
             if (bids.isPresent()) {
@@ -204,14 +204,44 @@ public class AuctionRestController {
      * @return an http status code signifying success or failure
      */
     @PostMapping(path = "/auctions/{id}/bids", consumes = {MediaType.APPLICATION_JSON_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<?> addBidToAuction(@PathVariable String id, @RequestBody BidModel bid) {
+    public ResponseEntity<?> addBidToAuction(@PathVariable String id, @RequestBody OfferModel bid) {
         try {
             // Add bid to auction & get response
             HttpStatus status = switch (this.service.addBidToAuction(id, bid)) {
-                case AUCTION_NOT_FOUND -> HttpStatus.NOT_FOUND;
-                case BID_TOO_LOW -> HttpStatus.CONFLICT;
-                case AUCTION_ENDED -> HttpStatus.NOT_ACCEPTABLE;
+                case NOT_FOUND -> HttpStatus.NOT_FOUND;
+                case EXPIRED -> HttpStatus.NOT_ACCEPTABLE;
+                case ALREADY_PURCHASED -> HttpStatus.BAD_REQUEST;
+                case TOO_LOW, TOO_HIGH -> HttpStatus.CONFLICT;
                 case SUCCESS -> HttpStatus.CREATED;
+                case SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+            };
+
+            // Return the response
+            return new ResponseEntity<>(status);
+        } catch (Exception exception) {
+            // Print the error
+            exception.printStackTrace();
+
+            // Return internal server error
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * The API Endpoint for purchasing an auction.
+     *
+     * @param id the auction id
+     */
+    @PostMapping(path = "/auctions/{id}/purchase", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> purchaseAuction(@PathVariable String id, @RequestBody OfferModel purchase) {
+        try {
+            // Purchase the auction
+            HttpStatus status = switch (this.service.purchaseAuction(id, purchase)) {
+                case NOT_FOUND -> HttpStatus.NOT_FOUND;
+                case EXPIRED -> HttpStatus.NOT_ACCEPTABLE;
+                case ALREADY_PURCHASED -> HttpStatus.BAD_REQUEST;
+                case TOO_LOW, TOO_HIGH -> HttpStatus.CONFLICT;
+                case SUCCESS -> HttpStatus.NO_CONTENT;
                 case SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
             };
 

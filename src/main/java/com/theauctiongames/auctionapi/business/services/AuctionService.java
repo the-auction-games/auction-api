@@ -1,7 +1,7 @@
 package com.theauctiongames.auctionapi.business.services;
 
 import com.theauctiongames.auctionapi.business.models.AuctionModel;
-import com.theauctiongames.auctionapi.business.models.BidModel;
+import com.theauctiongames.auctionapi.business.models.OfferModel;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,14 +56,23 @@ public interface AuctionService {
      * @param id the auction id
      * @return a list of bids
      */
-    Optional<List<BidModel>> getBidsForAuction(String id);
+    Optional<List<OfferModel>> getBidsForAuction(String id);
 
     /**
      * Create a bid for an auction.
      *
      * @param id  the auction id
      * @param bid the bid model
-     * @return true if the bid was created, false otherwise
+     * @return the offer response
      */
-    BidResponse addBidToAuction(String id, BidModel bid);
+    OfferResponse addBidToAuction(String id, OfferModel bid);
+
+    /**
+     * Purchase an auction.
+     *
+     * @param id       the auction id
+     * @param purchase the purchase offer
+     * @return the offer response
+     */
+    OfferResponse purchaseAuction(String id, OfferModel purchase);
 }

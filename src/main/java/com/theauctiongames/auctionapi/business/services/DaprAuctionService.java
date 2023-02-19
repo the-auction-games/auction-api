@@ -1,10 +1,10 @@
 package com.theauctiongames.auctionapi.business.services;
 
-import com.theauctiongames.auctionapi.business.models.BidModel;
+import com.theauctiongames.auctionapi.business.models.OfferModel;
 import com.theauctiongames.auctionapi.data.daos.AuctionDao;
 import com.theauctiongames.auctionapi.data.entities.AuctionEntity;
 import com.theauctiongames.auctionapi.business.models.AuctionModel;
-import com.theauctiongames.auctionapi.data.entities.BidEntity;
+import com.theauctiongames.auctionapi.data.entities.OfferEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -100,7 +100,7 @@ public class DaprAuctionService implements AuctionService {
      * @return a list of bids
      */
     @Override
-    public Optional<List<BidModel>> getBidsForAuction(String id) {
+    public Optional<List<OfferModel>> getBidsForAuction(String id) {
         // Get the auction
         Optional<AuctionEntity> auction = this.auctionDao.getAuctionById(id);
 
@@ -111,7 +111,7 @@ public class DaprAuctionService implements AuctionService {
 
         // Return the bids
         return Optional.of(auction.get().getBids().stream()
-                .map(BidModel::fromEntity)
+                .map(OfferModel::fromEntity)
                 .collect(Collectors.toList()));
     }
 
@@ -123,53 +123,110 @@ public class DaprAuctionService implements AuctionService {
      * @return the bid response
      */
     @Override
-    public BidResponse addBidToAuction(String id, BidModel bid) {
+    public OfferResponse addBidToAuction(String id, OfferModel bid) {
         // Get the auction
         Optional<AuctionEntity> auction = this.auctionDao.getAuctionById(id);
 
-        // Check if empty
-        if (auction.isEmpty()) {
-            // Return auction not found
-            return BidResponse.AUCTION_NOT_FOUND;
-        }
-
-        // Check if the bid was received after the auction expired
-        if (bid.getCreationTimestamp() >= auction.get().getExpirationTimestamp()) {
-            // Return auction ended
-            return BidResponse.AUCTION_ENDED;
+        // Check if the auction can receive an offer
+        OfferResponse initialResponse = checkAuction(auction);
+        if (initialResponse != OfferResponse.SUCCESS) {
+            return initialResponse;
         }
 
         // The current bids
-        List<BidEntity> bids = auction.get().getBids();
+        List<OfferEntity> bids = auction.get().getBids();
 
         // Check if the bid is lower than the starting price
-        if (bid.getPrice() <= auction.get().getStartBid()) {
+        if (bid.getPrice() < auction.get().getStartBid()) {
             // Return bid too low
-            return BidResponse.BID_TOO_LOW;
+            return OfferResponse.TOO_LOW;
+        }
+
+        // Check if the bid is higher than the buy it now price
+        if (bid.getPrice() >= auction.get().getBinPrice()) {
+            // Return bid too high
+            return OfferResponse.TOO_HIGH;
         }
 
         // Check if the bid is higher than the current highest bid
         if (bids.size() > 0) {
             // The last bid
-            BidEntity lastBid = bids.get(bids.size() - 1);
+            OfferEntity lastBid = bids.get(bids.size() - 1);
 
             // Return 0 if the bid is lower than the last bid
             if (bid.getPrice() <= lastBid.getPrice()) {
                 // Return bid too low
-                return BidResponse.BID_TOO_LOW;
+                return OfferResponse.TOO_LOW;
             }
         }
 
         // Add the bid
-        auction.get().getBids().add(BidEntity.fromModel(bid));
+        auction.get().getBids().add(OfferEntity.fromModel(bid));
 
         // Save the auction with the new bid
-        if (this.auctionDao.updateAuction(auction.get())) {
-            // Return success
-            return BidResponse.SUCCESS;
-        } else {
-            // Return server error
-            return BidResponse.SERVER_ERROR;
+        return this.auctionDao.updateAuction(auction.get()) ? OfferResponse.SUCCESS : OfferResponse.SERVER_ERROR;
+    }
+
+    /**
+     * Purchase the auction.
+     *
+     * @param id       the auction id
+     * @param purchase the purchase offer
+     * @return the purchase response
+     */
+    @Override
+    public OfferResponse purchaseAuction(String id, OfferModel purchase) {
+        // Get the auction
+        Optional<AuctionEntity> auction = this.auctionDao.getAuctionById(id);
+
+        // Check if the auction can receive an offer
+        OfferResponse initialResponse = checkAuction(auction);
+        if (initialResponse != OfferResponse.SUCCESS) {
+            return initialResponse;
         }
+
+        // Make sure the purchase price matches the buy it now price
+        if (purchase.getPrice() < auction.get().getBinPrice()) {
+            // Return bid too low
+            return OfferResponse.TOO_LOW;
+        } else if (purchase.getPrice() > auction.get().getBinPrice()) {
+            // Return bid too high
+            return OfferResponse.TOO_HIGH;
+        }
+
+        // Set the purchase
+        auction.get().setPurchase(OfferEntity.fromModel(purchase));
+
+        // Save the auction with the new bid
+        return this.auctionDao.updateAuction(auction.get()) ? OfferResponse.SUCCESS : OfferResponse.SERVER_ERROR;
+    }
+
+    /**
+     * Check if an auction can receive an offer.
+     *
+     * @param auction the auction
+     * @return the offer response
+     */
+    private OfferResponse checkAuction(Optional<AuctionEntity> auction) {
+        // Check if empty
+        if (auction.isEmpty()) {
+            // Return auction not found
+            return OfferResponse.NOT_FOUND;
+        }
+
+        // Check if the auction has expired
+        if (System.currentTimeMillis() > auction.get().getExpirationTimestamp()) {
+            // Return auction not ended
+            return OfferResponse.EXPIRED;
+        }
+
+        // Check if the auction is already purchased
+        if (auction.get().getPurchase() != null) {
+            // Return auction already purchased
+            return OfferResponse.ALREADY_PURCHASED;
+        }
+
+        // Successfully passed
+        return OfferResponse.SUCCESS;
     }
 }
