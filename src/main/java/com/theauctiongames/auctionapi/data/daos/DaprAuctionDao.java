@@ -27,11 +27,6 @@ import java.util.stream.Collectors;
 public class DaprAuctionDao implements AuctionDao {
 
     /**
-     * The state store name.
-     */
-    private final String stateStoreName;
-
-    /**
      * The state store URL.
      */
     private final String stateUrl;
@@ -45,9 +40,13 @@ public class DaprAuctionDao implements AuctionDao {
      * Construct the dapr auction DAO.
      */
     public DaprAuctionDao() {
-        this.stateStoreName = "mongo";
-        this.stateUrl = "http://localhost:3501/v1.0/state/" + this.stateStoreName;
-        this.queryUrl = "http://localhost:3501/v1.0-alpha1/state/" + this.stateStoreName + "/query";
+        // Get the environment variables
+        String sidecarPort = System.getenv("SIDECAR_PORT");
+        String stateStoreName = System.getenv("STATE_STORE_NAME");
+
+        // Set the URLs
+        this.stateUrl = "http://localhost:" + sidecarPort + "/v1.0/state/" + stateStoreName;
+        this.queryUrl = "http://localhost:" + sidecarPort + "/v1.0-alpha1/state/" + stateStoreName + "/query";
     }
 
     /**
